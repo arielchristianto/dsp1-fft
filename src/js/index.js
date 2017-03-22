@@ -1,1 +1,0 @@
-const Form = require('./form');
