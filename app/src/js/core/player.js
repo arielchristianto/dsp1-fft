@@ -1,7 +1,7 @@
 const player = (function() {
     "use strict";
     let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    let sourceNode = audioContext.createBufferSource();
+    let oscilatorNode = audioContext.createOscillator();
     let analyser = audioContext.createAnalyser();
 
     let fileReader = new FileReader();
@@ -9,7 +9,11 @@ const player = (function() {
     let audioBuffer = null;
     let audioIsPlayed = false;
 
-    sourceNode.connect(audioContext.destination);
+
+    oscilatorNode.type = "square";
+    oscilatorNode.frequency.value = 440;
+
+    analyser.connect(audioContext.destination);
 
 
     fileReader.onload = function(){
@@ -23,6 +27,13 @@ const player = (function() {
         })
     };
 
+    let createOscillator = function (frequency = 880, type = 'square') {
+        oscilatorNode = audioContext.createOscillator();
+        oscilatorNode.connect(analyser);
+        oscilatorNode.frequency.value = frequency;
+        oscilatorNode.type = type;
+    };
+
     return {
         setFile: function(file) {
             console.log('loading');
@@ -34,8 +45,9 @@ const player = (function() {
                 audioIsPlayed = true;
                 console.log('playing');
 
-                sourceNode.buffer = audioBuffer;
-                sourceNode.start(0);
+                createOscillator();
+
+                oscilatorNode.start(0);
             } else {
                 console.log('already Playing');
                 return '0000000';
@@ -46,7 +58,7 @@ const player = (function() {
             if (audioIsPlayed) {
                 audioIsPlayed = false;
 
-                sourceNode.stop();
+                oscilatorNode.stop();
                 console.log('stopped');
             } else {
                 console.log('already stopped');

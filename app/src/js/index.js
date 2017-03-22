@@ -11,16 +11,10 @@ const realCanvas = document.getElementById('real--canvas');
 
 const player = require('./core/player');
 
-formButton.onclick = function() {
-    "use strict";
-    formInput.click();
-};
+formButton.onclick = formInput.click;
 
-formPlay.onclick = function() {
-    "use strict";
+formPlay.onclick = player.play;
 
-    resultText.innerHTML = player.play();
-};
 
 formInput.onchange = function () {
     player.setFile(formInput.files[0]);
