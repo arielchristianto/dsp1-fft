@@ -18,9 +18,12 @@ formButton.onclick = function() {
 
 formPlay.onclick = function() {
     "use strict";
-    player.setFile(formInput.files[0]);
 
-    player.play();
+    resultText.innerHTML = player.play();
+};
+
+formInput.onchange = function () {
+    player.setFile(formInput.files[0]);
 };
 
 formStop.onclick = player.stop;
