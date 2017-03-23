@@ -1,20 +1,28 @@
 const player = (function() {
     "use strict";
     let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    let oscilatorNode = audioContext.createOscillator();
+    let gainNode = audioContext.createGain();
+    let oscillatorNode = audioContext.createOscillator();
+    let bufferSource = audioContext.createBufferSource();
     let analyser = audioContext.createAnalyser();
-
     let fileReader = new FileReader();
 
     let audioBuffer = null;
     let audioIsPlayed = false;
+    let bufferLength = 1024;
+    let dataArray = new Uint8Array(bufferLength);
 
+    let frequencyCanvas = null;
+    let frequencyCanvasContext = null;
 
-    oscilatorNode.type = "square";
-    oscilatorNode.frequency.value = 440;
+    analyser.fftSize = 2048;
+    oscillatorNode.type = "square";
+    oscillatorNode.frequency.value = 440;
 
+    gainNode.gain.value = 0.1;
+
+    gainNode.connect(analyser);
     analyser.connect(audioContext.destination);
-
 
     fileReader.onload = function(){
         audioContext.decodeAudioData(this.result).
@@ -27,38 +35,84 @@ const player = (function() {
         })
     };
 
+
     let createOscillator = function (frequency = 880, type = 'square') {
-        oscilatorNode = audioContext.createOscillator();
-        oscilatorNode.connect(analyser);
-        oscilatorNode.frequency.value = frequency;
-        oscilatorNode.type = type;
+        oscillatorNode = audioContext.createOscillator();
+        oscillatorNode.connect(gainNode);
+        oscillatorNode.frequency.value = frequency;
+        oscillatorNode.type = type;
+    };
+
+    let playAudio = function () {
+        if (!audioIsPlayed) {
+            audioIsPlayed = true;
+            console.log('playing');
+
+            createOscillator();
+
+            oscillatorNode.start(0);
+        } else {
+            console.log('already Playing');
+            return '0000000';
+        }
+    };
+
+    let drawVisual;
+    let CANVAS_WIDTH, CANVAS_HEIGHT;
+    let drawWaveform = function () {
+        drawVisual = requestAnimationFrame(drawWaveform);
+
+        analyser.getByteTimeDomainData(dataArray);
+
+        frequencyCanvasContext.fillStyle = 'rgb(200,200,200)';
+        frequencyCanvasContext.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        frequencyCanvasContext.lineWidth = 1;
+        frequencyCanvasContext.strokeStyle = 'rgb(0,0,0)';
+
+        frequencyCanvasContext.beginPath();
+
+        let sliceWidth = CANVAS_WIDTH * 1.0 / bufferLength;
+        let x =0;
+
+        for (let i=0; i< bufferLength; i++) {
+            let v = dataArray[i]/ 128.0;
+            let y = v * CANVAS_HEIGHT/2;
+
+            (i === 0) ?
+                frequencyCanvasContext.moveTo(x, y) :
+                frequencyCanvasContext.lineTo(x, y);
+
+            x+=sliceWidth;
+        }
+
+        frequencyCanvasContext.moveTo(CANVAS_WIDTH, CANVAS_HEIGHT / 2);
+        frequencyCanvasContext.stroke();
     };
 
     return {
+        setCanvas: function (canvas) {
+            frequencyCanvas = canvas;
+            frequencyCanvasContext = canvas.getContext('2d');
+            CANVAS_HEIGHT = frequencyCanvas.height;
+            CANVAS_WIDTH = frequencyCanvas.width;
+            frequencyCanvasContext.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        },
         setFile: function(file) {
             console.log('loading');
             fileReader.readAsArrayBuffer(file);
         },
 
         play: function(){
-            if (!audioIsPlayed) {
-                audioIsPlayed = true;
-                console.log('playing');
-
-                createOscillator();
-
-                oscilatorNode.start(0);
-            } else {
-                console.log('already Playing');
-                return '0000000';
-            }
+            playAudio();
+            drawWaveform();
         },
 
         stop: function () {
             if (audioIsPlayed) {
                 audioIsPlayed = false;
-
-                oscilatorNode.stop();
+                window.cancelAnimationFrame(drawVisual);
+                oscillatorNode.stop();
                 console.log('stopped');
             } else {
                 console.log('already stopped');
