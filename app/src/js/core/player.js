@@ -6,6 +6,7 @@ const player = (function() {
     let bufferSource = audioContext.createBufferSource();
     let analyser = audioContext.createAnalyser();
     let fileReader = new FileReader();
+    let sourceNode;
 
     let audioBuffer = null;
     let audioIsPlayed = false;
@@ -45,12 +46,22 @@ const player = (function() {
 
     let playAudio = function () {
         if (!audioIsPlayed) {
+            sourceNode = audioContext.createBufferSource();
+            sourceNode.connect(analyser);
+
             audioIsPlayed = true;
             console.log('playing');
 
-            createOscillator();
+            sourceNode.buffer = audioBuffer;
 
-            oscillatorNode.start(0);
+            audioIsPlayed = true;
+            console.log('playing');
+
+
+            sourceNode.start();
+            // createOscillator();
+            //
+            // oscillatorNode.start(0);
         } else {
             console.log('already Playing');
             return '0000000';
@@ -147,14 +158,15 @@ const player = (function() {
 
         play: function(){
             playAudio();
-            drawFrequencyDomain();
+            drawTimeDomain();
         },
 
         stop: function () {
             if (audioIsPlayed) {
                 audioIsPlayed = false;
                 window.cancelAnimationFrame(drawVisual);
-                oscillatorNode.stop();
+                // oscillatorNode.stop();
+                sourceNode.stop();
                 console.log('stopped');
             } else {
                 console.log('already stopped');
