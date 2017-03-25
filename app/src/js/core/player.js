@@ -94,8 +94,7 @@ const player = (function() {
         let x =0;
 
         for (let i=0; i< bufferLength; i++) {
-            // let v = dataArray[i]/ 128.0;
-            // let y = v * CANVAS_HEIGHT/2;
+
             let y = dataArray[i] * CANVAS_HEIGHT/2 + (CANVAS_HEIGHT/2);
 
             (i === 0) ?
@@ -110,7 +109,8 @@ const player = (function() {
     };
 
     let drawFrequencyDomain = function () {
-        bufferLength = analyser.fftSize;
+        bufferLength = analyser.fftSize = 2048;
+        let arrayFftLength = bufferLength/2;
         drawVisual = requestAnimationFrame(drawFrequencyDomain);
         dataArray = new Float32Array(bufferLength);
 
@@ -118,33 +118,29 @@ const player = (function() {
 
         let arrayFftResult = fourier.calculateFft(Array.from(dataArray));
 
-        console.log(arrayFftResult);
-
         frequencyCanvasContext.fillStyle = 'rgb(255,255,255)';
         frequencyCanvasContext.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
         frequencyCanvasContext.lineWidth = 0.5;
         frequencyCanvasContext.strokeStyle = 'rgb(0,0,0)';
 
-        // frequencyCanvasContext.beginPath();
-        //
-        // let sliceWidth = CANVAS_WIDTH * 1.0 / bufferLength;
-        // let x =0;
-        //
-        // for (let i=0; i< bufferLength; i++) {
-        //     // let v = dataArray[i]/ 128.0;
-        //     // let y = v * CANVAS_HEIGHT/2;
-        //     let y = dataArray[i] * CANVAS_HEIGHT/2 + (CANVAS_HEIGHT/2);
-        //
-        //     (i === 0) ?
-        //         frequencyCanvasContext.moveTo(x, y) :
-        //         frequencyCanvasContext.lineTo(x, y);
-        //
-        //     x+=sliceWidth;
-        // }
-        //
-        // frequencyCanvasContext.moveTo(CANVAS_WIDTH, CANVAS_HEIGHT / 2);
-        // frequencyCanvasContext.stroke();
+        frequencyCanvasContext.beginPath();
+
+        let sliceWidth = CANVAS_WIDTH * 1.0 / arrayFftLength;
+        let x =0;
+
+        for (let i=0; i< arrayFftLength; i++) {
+            let y = CANVAS_HEIGHT - (fourier.getAmplitude(arrayFftResult[i])/500) * CANVAS_HEIGHT;
+
+            (i === 0) ?
+                frequencyCanvasContext.moveTo(x, y) :
+                frequencyCanvasContext.lineTo(x, y);
+
+            x+=sliceWidth;
+        }
+
+        frequencyCanvasContext.moveTo(CANVAS_WIDTH, CANVAS_HEIGHT);
+        frequencyCanvasContext.stroke();
     };
 
 
