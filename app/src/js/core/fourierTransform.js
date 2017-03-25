@@ -22,6 +22,7 @@ const fourier = (function () {
         },
 
         calculateFft: function (sequence) {
+            let length = sequence.length;
             if (length === 1) {
                 return sequence;
             }
@@ -37,8 +38,8 @@ const fourier = (function () {
                 evenFft[i] = sequence[i * 2];
                 oddFft[i] = sequence[i * 2 + 1];
             }
-            evenFft = calculateFft(evenFft);
-            oddFft = calculateFft(oddFft);
+            evenFft = this.calculateFft(evenFft);
+            oddFft = this.calculateFft(oddFft);
 
             //merging
             for(let k = 0; k<halfLength; k++) {
@@ -46,15 +47,15 @@ const fourier = (function () {
                 let wImaginer = -1 * Math.sin(2 * math.pi * k / length);
                 let W = math.complex(wReal, wImaginer);
 
-                sequence[k] = math.format(math.add(
+                sequence[k] = math.add(
                     evenFft[k],
                     math.multiply(oddFft[k], W)
-                ), 2);
+                );
 
-                sequence[k+halfLength] = math.format(math.add(
+                sequence[k+halfLength] = math.add(
                     evenFft[k],
                     math.multiply(math.multiply(oddFft[k], W), -1)
-                ), 2);
+                );
             }
 
             return sequence;

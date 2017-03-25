@@ -1,3 +1,5 @@
+const fourier = require('./fourierTransform');
+
 const player = (function() {
     "use strict";
     let audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -77,6 +79,9 @@ const player = (function() {
 
         analyser.getFloatTimeDomainData(dataArray);
 
+        dataArray = fourier.calculateFft(dataArray);
+
+
         frequencyCanvasContext.fillStyle = 'rgb(255,255,255)';
         frequencyCanvasContext.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
@@ -105,41 +110,41 @@ const player = (function() {
     };
 
     let drawFrequencyDomain = function () {
+        bufferLength = analyser.fftSize;
         drawVisual = requestAnimationFrame(drawFrequencyDomain);
+        dataArray = new Float32Array(bufferLength);
 
-        // analyser.fftSize = 256;
+        analyser.getFloatTimeDomainData(dataArray);
 
-        bufferLength = analyser.frequencyBinCount;
-        dataArray = new Uint8Array(bufferLength);
+        let arrayFftResult = fourier.calculateFft(Array.from(dataArray));
 
-        analyser.getByteFrequencyData(dataArray);
-        console.log(dataArray);
+        console.log(arrayFftResult);
+
         frequencyCanvasContext.fillStyle = 'rgb(255,255,255)';
         frequencyCanvasContext.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
         frequencyCanvasContext.lineWidth = 0.5;
         frequencyCanvasContext.strokeStyle = 'rgb(0,0,0)';
 
-        frequencyCanvasContext.beginPath();
-
-        let sliceWidth = CANVAS_WIDTH * 1.0 / bufferLength;
-        let x = 0;
-
-        for (let i = 0; i < bufferLength; i++) {
-            // let v = dataArray[i] / 128.0;
-            // let y = v * CANVAS_HEIGHT / 2;
-
-            let y = CANVAS_HEIGHT/2;
-
-            (i === 0) ?
-                frequencyCanvasContext.moveTo(x, y) :
-                frequencyCanvasContext.lineTo(x, y);
-
-            x += sliceWidth;
-        }
-
-        frequencyCanvasContext.moveTo(CANVAS_WIDTH, CANVAS_HEIGHT);
-        frequencyCanvasContext.stroke();
+        // frequencyCanvasContext.beginPath();
+        //
+        // let sliceWidth = CANVAS_WIDTH * 1.0 / bufferLength;
+        // let x =0;
+        //
+        // for (let i=0; i< bufferLength; i++) {
+        //     // let v = dataArray[i]/ 128.0;
+        //     // let y = v * CANVAS_HEIGHT/2;
+        //     let y = dataArray[i] * CANVAS_HEIGHT/2 + (CANVAS_HEIGHT/2);
+        //
+        //     (i === 0) ?
+        //         frequencyCanvasContext.moveTo(x, y) :
+        //         frequencyCanvasContext.lineTo(x, y);
+        //
+        //     x+=sliceWidth;
+        // }
+        //
+        // frequencyCanvasContext.moveTo(CANVAS_WIDTH, CANVAS_HEIGHT / 2);
+        // frequencyCanvasContext.stroke();
     };
 
 
@@ -158,7 +163,7 @@ const player = (function() {
 
         play: function(){
             playAudio();
-            drawTimeDomain();
+            drawFrequencyDomain();
         },
 
         stop: function () {
