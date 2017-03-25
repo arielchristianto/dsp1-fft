@@ -1,9 +1,6 @@
 import math from 'mathjs';
 
 const fourier = (function () {
-    let calculateSubFft = function (sequence) {
-
-    };
     return {
         calculateDft: function (sequence) {
             let result = [];
@@ -61,9 +58,11 @@ const fourier = (function () {
             }
 
             return sequence;
+        },
+        getAmplitude: function (complexFourier) {
+            return math.sqrt(complexFourier.re * complexFourier.re + complexFourier.im * complexFourier.im);
         }
     }
-
 })();
 
 module.exports = fourier;
